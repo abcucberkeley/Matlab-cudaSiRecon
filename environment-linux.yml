@@ -2,7 +2,8 @@ name: simbuild
 channels:
   - conda-forge
 dependencies:
-  - cudatoolkit-dev
+# switched from cudatoolkit-dev
+  - cudatoolkit
   - make
   - cxx-compiler
   - fftw

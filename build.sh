@@ -13,11 +13,11 @@ cd cmake_build
 
 CXXFLAGS="$CXXFLAGS -Wfatal-errors -Wno-deprecated-declarations"
 cmake ${CMAKE_ARGS} \
-    -DBUILD_MRC=ON \
-    -DBUILD_OTF_VIEWER=OFF \
+    -DBUILD_MRC=OFF \
+    -DBUILD_OTF_VIEWER=ON \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX \
     ../src
 
-make -j 2
-make install
+make -j
+make -j install
