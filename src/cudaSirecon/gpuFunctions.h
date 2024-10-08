@@ -23,7 +23,7 @@ void image_arithmetic(GPUBuffer* a, const GPUBuffer& b,
     int len, float alpha, float beta);
 
 void apodize(int napodize, int nx,int ny, GPUBuffer* image, int offset);
-void cosapodize(int nx,int ny, GPUBuffer* image, int offset);
+void cosapodize(int nx,int ny, GPUBuffer* image, int offset,  float cosPeriodX, float cosPeriodY, float cosAmpX, float cosAmpY);
 void rescale(int nx, int ny, int nz, int z, int zoffset, int direction,
     int wave, int t, int phases, std::vector<GPUBuffer>* images, int equalizez,
     int equalizet, double* sum_dir0_phase0);

@@ -5,6 +5,9 @@
 #define _USE_MATH_DEFINES
 #endif
 
+// For MATLAB functions
+#include "mex.h"
+
 #include <cuda.h>
 #include <cufft.h>
 #include <iostream>
@@ -131,6 +134,10 @@ struct ReconParams {
   int   bUseTime0k0;   /** whether to use time 0's k0 fit for the rest of a time series */
   int   apodizeoutput;  /** 0-no apodize; 1-cosine apodize; 2-triangle apodize; used in filterbands() */
   float apoGamma;
+  float cosPeriodX;
+  float cosPeriodY;
+  float cosAmpX;
+  float cosAmpY;
   int   bSuppress_singularities;  /** whether to dampen the OTF values near band centers; used in filterbands() */
   int   suppression_radius;   /** if suppress_singularities is 1, the range within which suppresion is applied; used in filterbands() */
   bool  bDampenOrder0;  /** whether to dampen the OTF values near band centers; used in filterbands() */
@@ -313,6 +320,10 @@ void transformXYSlice(int zoffset, ReconParams* params,
 // //     float dr, int nphases, int nz, int direction, int z);
 
 void writeResult(int it, int iw, const ReconParams& params,
+    const ImageParams& imgParams, const ReconData& reconData);
+
+// Matthew Mueller
+mxArray* passResult(int it, int iw, const ReconParams& params,
     const ImageParams& imgParams, const ReconData& reconData);
 
 // This only works for MRC/DV files for now:

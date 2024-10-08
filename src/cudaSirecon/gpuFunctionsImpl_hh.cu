@@ -51,7 +51,7 @@ __global__ void apodize_x_kernel(int napodize, int nx, int ny,
     float* image);
 __global__ void apodize_y_kernel(int napodize, int nx, int ny,
     float* image);
-__global__ void cosapodize_kernel(int nx, int ny, float* image);
+__global__ void cosapodize_kernel(int nx, int ny, float* image, float cosPeriodX, float cosPeriodY, float cosAmpX, float cosAmpY);
 __global__ void rescale_kernel(float* img, int nx, int ny,
     float scaleFactor);
 __global__ void sum_reduction_kernel(float* img, int nx, int ny,

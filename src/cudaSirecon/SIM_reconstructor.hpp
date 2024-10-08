@@ -5,6 +5,8 @@
 namespace po = boost::program_options;
 #include <boost/tokenizer.hpp>
 
+#include "mex.h"
+
 
 //! All calculation starts with a SIM_Reconstructor object
 /*!
@@ -19,6 +21,13 @@ namespace po = boost::program_options;
 class SIM_Reconstructor { 
 
 public:
+  // MATLAB
+  float* inImg;
+  uint64_t* inImgDim;
+  
+  float* inOtf;
+  uint64_t* inOtfDim;
+  
   /*! This constructor does the following:
    * - Command line is parsed by this ctor using Boost program_options library;
    * - Set all parameters' values;
@@ -29,6 +38,7 @@ public:
    * - Call setup() to allocate all memory buffers based on header dimension info and deskew request
    */
   SIM_Reconstructor(int argc, char **argv);
+  SIM_Reconstructor(int argc, char **argv, const mxArray* inImgMex, const mxArray* inOtfMex);
   /*! This constructor does the following:
    * Set up options format using Boost program_options library;
    * Parse the config file for user parameter settings
@@ -80,6 +90,7 @@ public:
 
   //! Off-load processed result to host and save it to disk
   void writeResult(int timeIdx, int waveIdx);
+  mxArray* passResult(int timeIdx, int waveIdx);
   void getResult(float *result);
 
   int getNTimes() { return m_imgParams.ntimes; };

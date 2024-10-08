@@ -92,7 +92,7 @@ __host__ void cosapodize(int nx,int ny, GPUBuffer* image, int offset)
   numBlocks.y = (int)(ceil((float)ny / blockSize.y));
   numBlocks.z = 1;
   cosapodize_kernel<<<numBlocks, blockSize>>>(nx, ny,
-      ((float*)image->getPtr()) + offset);
+      ((float*)image->getPtr()) + offset, float cosPeriodX, float cosPeriodY, float cosAmpX, float cosAmpY)
 }
 
 __global__ void cosapodize_kernel(int nx, int ny, float* image)
@@ -101,8 +101,8 @@ __global__ void cosapodize_kernel(int nx, int ny, float* image)
   int l = blockDim.y * blockIdx.y + threadIdx.y;
   int xdim = (nx/2+1) * 2;
   if (k<nx && l<ny) {
-    float xfact = sinf(M_PI * ((float)k + 0.5) / nx);
-    float yfact = sinf(M_PI * ((float)l + 0.5) / ny);
+    float xfact = sinf(M_PI * cosPeriodX * (((float)k + 0.5) / nx)) * cosAmpX;
+    float yfact = sinf(M_PI * cosPeriodY * (((float)l + 0.5) / ny)) * cosAmpY;
     image[l * xdim + k] *= xfact * yfact;
   }
 }

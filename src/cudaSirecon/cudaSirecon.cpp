@@ -35,6 +35,9 @@ void SetDefaultParams(ReconParams *pParams)
   pParams->explodefact= 1.0;
   pParams->bFilteroverlaps = 1;
   pParams->recalcarrays = 1; //! whether to calculate the overlaping regions between bands just once or always; used in fitk0andmodamps()
+  // Testing apodize with different values other than 10 - Matthew Mueller
+  //pParams->cosGammaX = m_myParams.cosGammaX;
+  //pParams->cosGammaY = m_myParams.cosGammaY;
   pParams->napodize = 10;
   pParams->forceamp.assign(1, 0.f);
   // pParams->k0angles = NULL;
@@ -510,7 +513,7 @@ void apodizationDriver(int zoffset, ReconParams* params,
               (z + zoffset) * (imgParams.nx/2 + 1)*2 * imgParams.ny);
         } else if (params->napodize == -1) {
           cosapodize(imgParams.nx, imgParams.ny, &(*rawImages)[phase],
-              (z + zoffset) * (imgParams.nx/2 +1)*2 * imgParams.ny);
+              (z + zoffset) * (imgParams.nx/2 +1)*2 * imgParams.ny,params->cosPeriodX,params->cosPeriodY,params->cosAmpX,params->cosAmpY);
         }
       } /* end for (phase), loading, flatfielding, and apodizing raw images */
     }
@@ -875,6 +878,160 @@ SIM_Reconstructor::SIM_Reconstructor(int argc, char **argv)
   bgAndSlope(m_myParams, m_imgParams, &m_reconData);
 }
 
+// CONSTRUCTOR FOR MATLAB
+SIM_Reconstructor::SIM_Reconstructor(int argc, char **argv, const mxArray* inImgMex, const mxArray* inOtfMex)
+{
+  uint64_t z = 0;
+  uint64_t x = 0;
+  uint64_t y = 0;
+  
+  //inImg = (float*)mxGetPr(inImgMex);
+  //inImgDim = (uint64_t*)mxGetDimensions(inImgMex);
+  
+  float* oInImg = (float*)mxGetPr(inImgMex);
+  inImgDim = (uint64_t*)mxGetDimensions(inImgMex);
+   
+  mxClassID mDType = mxGetClassID(inImgMex);
+  if(mDType != mxSINGLE_CLASS) mexErrMsgIdAndTxt("tiff:dataTypeError","Data is not of type single."); 
+  
+  // TESTING
+  z = inImgDim[2];
+  x = inImgDim[1];
+  y = inImgDim[0];
+  
+  inImg = (float*)malloc(x*y*z*sizeof(float));
+    
+  #pragma omp parallel for collapse(3)
+    for(uint64_t k = 0; k < z; k++){
+        for(uint64_t i = 0; i < x; i++){    
+            for(uint64_t j = 0; j < y; j++){
+                inImg[i+(j*x)+(k*(x*y))] = oInImg[j+(i*y)+(k*(x*y))];
+            }
+        }
+    }
+   
+   
+   
+  
+  //inOtf = (float*)mxGetPr(inOtfMex);
+  //inOtfDim = (uint64_t*)mxGetDimensions(inOtfMex);
+  
+  float* oInOtf = (float*)mxGetPr(inOtfMex);
+  mDType = mxGetClassID(inOtfMex);
+  if(mDType != mxSINGLE_CLASS) mexErrMsgIdAndTxt("tiff:dataTypeError","Otf is not of type single."); 
+  inOtfDim = (uint64_t*)mxGetDimensions(inOtfMex);
+  
+  z = inOtfDim[2];
+  x = inOtfDim[1];
+  y = inOtfDim[0];
+  
+  inOtf = (float*)malloc(x*y*z*sizeof(float));
+  #pragma omp parallel for collapse(3)
+    for(uint64_t k = 0; k < z; k++){
+        for(uint64_t i = 0; i < x; i++){    
+            for(uint64_t j = 0; j < y; j++){
+                inOtf[i+(j*x)+(k*(x*y))] = oInOtf[j+(i*y)+(k*(x*y))];
+            }
+        }
+    }
+  /*
+  CImg<float> imgO;
+  CImg<float> otfO;
+  
+  imgO.assign(inImg,inImgDim[1],inImgDim[0],inImgDim[2],1);
+  imgO.save_tiff("/clusterfs/nvme/matthewmueller/cudasireconMex/src/cudaSirecon/inImg.tif");
+  
+  otfO.assign(inOtf,inOtfDim[1],inOtfDim[0],inOtfDim[2],1);
+  otfO.save_tiff("/clusterfs/nvme/matthewmueller/cudasireconMex/src/cudaSirecon/otfImg.tif");
+  
+  std::cout << "Dim0: " << inImgDim[0] << " Dim1: " << inImgDim[1] << " Dim2: " << inImgDim[2] << std::endl;
+  std::cout << "Dim0: " << inOtfDim[0] << " Dim1: " << inOtfDim[1] << " Dim2: " << inOtfDim[2] << std::endl;
+  
+  mexErrMsgIdAndTxt("tiff:dataTypeError","Tiffs saved");
+  */
+  
+  
+  // Call this constructor from a command-line based program
+
+  m_argc = argc;
+  m_argv = argv;
+
+  SetDefaultParams(&m_myParams);
+  
+  // define all the commandline and config file options
+  setupProgramOptions();
+  po::positional_options_description p;
+  p.add("input-file", 1);
+  p.add("output-file", 1);
+  p.add("otf-file", 1);
+
+  // parse the commandline
+  store(po::command_line_parser(argc, argv).
+        options(m_progopts).positional(p).run(), m_varsmap);
+
+  if (m_varsmap.count("help")) {
+    std::cout << "cudasirecon v" + version_number + " -- Written by Lin Shao. All rights reserved.\n" << "\n";
+    std::cout << m_progopts << "\n";
+    exit(0);
+  }
+  
+  if (m_varsmap.count("version")) {
+    std::cout << "Version " << version_number << std::endl;
+    exit(0);
+  }
+
+  notify(m_varsmap);
+
+  if (m_config_file != "") {
+    std::ifstream ifs(m_config_file.c_str());
+    if (!ifs) {
+      std::cout << "can not open config file: " << m_config_file << "\n";
+      std::cout << "proceed without it\n";
+    }
+    else {
+      // parse config file
+      store(parse_config_file(ifs, m_progopts), m_varsmap);
+      notify(m_varsmap);
+    }
+  }
+
+   // fill in m_myParams fields that have not been set yet
+  setParams();
+
+  printf("nphases=%d, ndirs=%d\n", m_myParams.nphases, m_myParams.ndirs);
+  
+  // In TIFF mode, m_myParams.ifiles refers to the name of the folder raw data resides in;
+  // and m_myParams.ofiles refers to a pattern in all the raw data file names.
+  // To help decide if input is in TIFF or MRC format, gather all TIFF files with
+  // matching names under the same folder:
+  if (boost::filesystem::is_directory(m_myParams.ifiles)) {
+    m_all_matching_files = gatherMatchingFiles(m_myParams.ifiles, m_myParams.ofiles);
+    // If there is no name-matching TIFF files, then presumably input is MRC
+    m_myParams.bTIFF = (m_all_matching_files.size() > 0);
+  }
+
+  if (m_myParams.bTIFF) {
+    // Suppress "unknown field" warnings
+    TIFFSetWarningHandler(NULL);
+    m_imgParams.ntimes = m_all_matching_files.size();
+  } else {
+  #ifndef MRC
+    throw std::runtime_error("No tiff files found, and program was not compiled with MRC support.");
+  #endif
+  }
+
+  m_OTFfile_valid = false;
+  openFiles();
+  // deviceMemoryUsage();
+
+  setup();
+  #ifdef MRC
+  if (!m_myParams.bTIFF)
+    ::setOutputHeader(m_myParams, m_imgParams, m_in_out_header);
+  #endif
+  //! Load flat-field correction data
+  bgAndSlope(m_myParams, m_imgParams, &m_reconData);
+}
 
 //! used by shared library
 SIM_Reconstructor::SIM_Reconstructor(int nx, int ny,
@@ -937,6 +1094,14 @@ int SIM_Reconstructor::setupProgramOptions()
      "refractive index of immersion medium")
     ("wiener", po::value<float>(&m_myParams.wiener)->default_value(0.01, "0.01"),
      "Wiener constant; lower value leads to higher resolution and noise; playing with it extensively is strongly encouraged")
+    ("cosPeriodX", po::value<float>(&m_myParams.cosPeriodX)->default_value(1.0),
+     "cosPeriodX")
+    ("cosPeriodY", po::value<float>(&m_myParams.cosPeriodY)->default_value(1.0),
+     "cosPeriodY")
+    ("cosAmpX", po::value<float>(&m_myParams.cosAmpX)->default_value(1.0),
+     "cosAmpX")
+    ("cosAmpY", po::value<float>(&m_myParams.cosAmpY)->default_value(1.0),
+     "cosAmpY")
     ("otfcutoff", po::value<float>(&m_myParams.otfcutoff)->default_value(0.006, "0.006"),
      "otf threshold below which it'll be considered noise and not used in makeoverlaps")
     ("zoomfact", po::value<float>(&m_myParams.zoomfact)->default_value(2.),
@@ -1040,8 +1205,35 @@ int SIM_Reconstructor::setParams()
   if (m_varsmap.count("gammaApo")) {
     // because "gammaApo" has a default value set, this block is always entered;
     // and therefore, "apodizeoutput" is always 2 (triangular or gamma apo)
-    m_myParams.apodizeoutput = 2;
+    
+    // Testing values other than 2 - Matthew Mueller
+  
+    if(m_myParams.apoGamma == -1.0){
+        m_myParams.napodize = -1;
+         m_myParams.apodizeoutput =  1;
+    }
+    else if(m_myParams.apoGamma == 0.0){
+        m_myParams.napodize = 0;
+         m_myParams.apodizeoutput = 0;
+    }
+    else if(m_myParams.apoGamma >= 1.0){
+        m_myParams.napodize = m_myParams.apoGamma;
+        m_myParams.apodizeoutput = 2;
+    }
     std::cout << "gamma = " << m_myParams.apoGamma << std::endl;
+  }
+
+  if (m_varsmap.count("cosPeriodX")) {
+    std::cout<< "cosPeriodX=" << m_myParams.cosPeriodX << std::endl;
+  }
+  if (m_varsmap.count("cosPeriodY")) {
+    std::cout<< "cosPeriodY=" << m_myParams.cosPeriodY << std::endl;
+  }
+  if (m_varsmap.count("cosAmpX")) {
+    std::cout<< "cosAmpX=" << m_myParams.cosAmpX << std::endl;
+  }
+  if (m_varsmap.count("cosAmpY")) {
+    std::cout<< "cosAmpY=" << m_myParams.cosAmpY << std::endl;
   }
 
   if (m_varsmap.count("saveprefiltered")) {
@@ -1090,7 +1282,8 @@ void SIM_Reconstructor::openFiles() {
 
   if (m_myParams.bTIFF) {
     // will throw CImgIOException if file cannot be opened
-    m_otf_tiff.assign(m_myParams.otffiles.c_str());
+    //m_otf_tiff.assign(m_myParams.otffiles.c_str());
+    m_otf_tiff.assign(inOtf,inOtfDim[1],inOtfDim[0],inOtfDim[2],1);
     m_OTFfile_valid = true;
   }
 #ifdef MRC
@@ -1118,12 +1311,18 @@ void SIM_Reconstructor::setup(unsigned nx, unsigned ny, unsigned nImages, unsign
 void SIM_Reconstructor::setup()
 {
   if (m_myParams.bTIFF) {
-    CImg<> tiff0(m_all_matching_files[0].c_str());
+    //CImg<> tiff0(m_all_matching_files[0].c_str());
     m_imgParams.nx = 0;
+    /*
     m_imgParams.nx_raw = tiff0.width();
     m_imgParams.ny = tiff0.height();
     m_imgParams.nz = tiff0.depth();
     m_imgParams.nwaves = tiff0.spectrum(); // multi-color not supported yet
+    */
+    m_imgParams.nx_raw = inImgDim[1];
+    m_imgParams.ny = inImgDim[0];
+    m_imgParams.nz = inImgDim[2];
+    m_imgParams.nwaves = 1; // multi-color not supported yet
     m_imgParams.nz /= m_imgParams.nwaves * m_myParams.nphases * m_myParams.ndirs;
   }
 #ifdef MRC
@@ -1337,7 +1536,8 @@ void SIM_Reconstructor::setRaw(CImg<> &input, int it, int iw)
 void SIM_Reconstructor::setFile(int it, int iw)
 {
   if (m_myParams.bTIFF) {
-    rawImage.assign(m_all_matching_files[it].c_str());
+    //rawImage.assign(m_all_matching_files[it].c_str());
+    rawImage.assign(inImg,inImgDim[1],inImgDim[0],inImgDim[2],1);
   }
   #ifdef MRC
   else {
@@ -1698,6 +1898,110 @@ void SIM_Reconstructor::writeResult(int it, int iw)
   printf("Time point %d, wave %d done\n", it, iw);
 }
 
+// Matthew Mueller - edit of writeResult to pass img back to MATLAB
+mxArray* SIM_Reconstructor::passResult(int it, int iw)
+{
+  CPUBuffer outbufferHost(
+      (m_myParams.zoomfact * m_imgParams.nx) *
+      (m_myParams.zoomfact * m_imgParams.ny) *
+      (m_myParams.z_zoom * m_imgParams.nz0) *
+      sizeof(float));
+  // if (it==0)
+  //   computeAminAmax(&reconData.outbuffer, m_myParams.zoomfact * m_imgParams.nx,
+  //                   m_myParams.zoomfact * m_imgParams.ny, m_myParams.z_zoom * m_imgParams.nz,
+  //                   &minval, &maxval);
+  m_reconData.outbuffer.set(&outbufferHost, 0, outbufferHost.getSize(), 0);
+
+#ifndef __clang__
+  double t1 = omp_get_wtime();
+#endif
+
+  uint64_t dim[3];
+  dim[0] = 0;
+  dim[1] = 0;
+  dim[2] = 0;
+  if (m_myParams.bTIFF) {
+  CImg<> outCimg((float*) outbufferHost.getPtr(),
+    m_myParams.zoomfact * m_imgParams.nx,
+    m_myParams.zoomfact * m_imgParams.ny,
+    m_myParams.z_zoom * m_imgParams.nz0, true);  // "true" means outCimg does not allocate host memory
+  
+  
+  //outCimg.save(makeOutputFilePath(m_all_matching_files[it], std::string("_proc")).c_str());  
+  dim[0] = outCimg.height();
+  dim[1] = outCimg.width();
+  dim[2] = outCimg.depth();
+  //std::cout << outCimg.pixel_type() << std::endl;
+  
+  mxArray *mexArr = mxCreateNumericArray(3, dim, mxSINGLE_CLASS, mxREAL);
+  float* cMexArr = (float*)mxGetPr(mexArr);
+  float* img = (float*)outCimg.data();
+
+  // DEBUGGING
+  //std::cout << "dim[0]: " << dim[0] << " dim[1]: " << dim[1] << " dim[2]: " << dim[2] << std::endl;
+  //outCimg.save_tiff("/clusterfs/nvme/matthewmueller/cudasireconMex/src/cudaSirecon/outImg.tif");
+  
+  uint64_t x = dim[0];
+  uint64_t y = dim[1];
+  uint64_t z = dim[2];
+    #pragma omp parallel for collapse(3)
+    for(uint64_t k = 0; k < z; k++){
+        for(uint64_t i = 0; i < x; i++){    
+            for(uint64_t j = 0; j < y; j++){
+                cMexArr[i+(j*x)+(k*(x*y))] = img[j+(i*y)+(k*(x*y))];
+                //cMexArr[j+(i*x)+(k*(x*y))] = img[i+(j*y)+(k*(x*y))];
+            }
+        }
+    }
+  
+  /*
+  #pragma omp parallel for
+  for(uint64_t i = 0; i < outCimg.size(); i++){
+    cMexArr[i] = img[i];
+  }*/
+  //memcpy(cMexArr,img,outCimg.size()*sizeof(float));
+  return mexArr;
+  }
+  return mxCreateNumericArray(3, dim, mxSINGLE_CLASS, mxREAL);
+#ifdef MRC
+  else {
+    float maxval = -FLT_MAX;
+    float minval = FLT_MAX;
+
+    float* ptr = ((float*)outbufferHost.getPtr()) +
+      (int)(m_zoffset * m_myParams.z_zoom * m_imgParams.nx * m_imgParams.ny *
+            m_myParams.zoomfact * m_myParams.zoomfact);
+    for (int i = 0; i < m_imgParams.nz * m_myParams.z_zoom; ++i) {
+      IMWrSec(ostream_no, ptr);
+      if (it == 0) {
+        for (int j = 0;
+             j < (int)(m_imgParams.nx * m_imgParams.ny *
+                       m_myParams.zoomfact * m_myParams.zoomfact);
+             ++j) {
+          if (ptr[j] > maxval) {
+            maxval = ptr[j];
+          } else if (ptr[j] < minval) {
+            minval = ptr[j];
+          }
+        }
+      }
+      ptr += (int)(m_myParams.zoomfact * m_imgParams.nx *
+                   m_myParams.zoomfact * m_imgParams.ny);
+    }
+    if (it == 0 && iw == 0) {
+      m_in_out_header.amin = minval;
+      m_in_out_header.amax = maxval;
+    }
+  }
+#endif
+
+#ifndef __clang__
+  double t2 = omp_get_wtime();
+  printf("amin, amax took: %f s\n", t2 - t1);
+#endif
+
+  printf("Time point %d, wave %d done\n", it, iw);
+}
 
 void SIM_Reconstructor::closeFiles()
 {

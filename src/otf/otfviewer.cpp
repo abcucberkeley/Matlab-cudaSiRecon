@@ -102,7 +102,13 @@ int main(int argc, char *argv[])
     amplitudes = ampAlt;
   }
 
-  amplitudes.display(argv[optind], false);
+  //amplitudes.display(argv[optind], false);
+  // Matthew Mueller
+  std::string outN(argv[optind]);
+  std::string outNS = outN.substr(0,outN.size()-4);
+  outNS.append(std::string("_converted.tif"));
+  amplitudes.save_tiff(outNS.c_str());
+
 
   // Somehow doubled XY image looks the same:
   // CImg<> large = amplitudes.resize_doubleXY();
