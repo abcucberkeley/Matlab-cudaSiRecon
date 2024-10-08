@@ -81,7 +81,7 @@ __global__ void apodize_y_kernel(int napodize, int nx, int ny,
   }
 }
 
-__host__ void cosapodize(int nx,int ny, GPUBuffer* image, int offset)
+__host__ void cosapodize(int nx,int ny, GPUBuffer* image, int offset, float cosPeriodX, float cosPeriodY, float cosAmpX, float cosAmpY)
 {
   dim3 blockSize;
   blockSize.x = 16;
@@ -92,10 +92,10 @@ __host__ void cosapodize(int nx,int ny, GPUBuffer* image, int offset)
   numBlocks.y = (int)(ceil((float)ny / blockSize.y));
   numBlocks.z = 1;
   cosapodize_kernel<<<numBlocks, blockSize>>>(nx, ny,
-      ((float*)image->getPtr()) + offset, float cosPeriodX, float cosPeriodY, float cosAmpX, float cosAmpY)
+      ((float*)image->getPtr()) + offset, cosPeriodX, cosPeriodY, cosAmpX, cosAmpY);
 }
 
-__global__ void cosapodize_kernel(int nx, int ny, float* image)
+__global__ void cosapodize_kernel(int nx, int ny, float* image, float cosPeriodX, float cosPeriodY, float cosAmpX, float cosAmpY)
 {
   int k = blockDim.x * blockIdx.x + threadIdx.x;
   int l = blockDim.y * blockIdx.y + threadIdx.y;
