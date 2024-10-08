@@ -2,7 +2,7 @@ function siReconWrapper(inFol,inN,outFol,otfF,configF,chunkSize,overlap, bak, nd
 if nargin < 8
     bak = 0;
 end
-addpath(genpath('/clusterfs/nvme/matthewmueller/cudasireconMex/src/cudaSirecon/'));
+addpath(genpath('/clusterfs/nvme/matthewmueller/Matlab-cudaSiRecon/src/cudaSirecon/'));
 cd '/clusterfs/nvme/ABCcode/XR_Repository'
 setup([],true);
 gpuDevice
@@ -28,7 +28,7 @@ gpuDevice
 %for i = 1:size(fileList,1)
 %outFullPath = [inFol sprintf('/GPUsirecon/%s/%s_recon_cs%d_ol%d.tif',outFol,inN,cs(ii,1),ol(ii))];
 outFullPath = [inFol sprintf('/%s/%s_recon.tif',outFol,inN)];
-mkdir([inFol filesep outFol]);
+mkdir([inFol '/' outFol]);
 %         if isfile(outFullPath)
 %             continue;
 %         end
