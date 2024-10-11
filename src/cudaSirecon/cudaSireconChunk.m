@@ -33,23 +33,25 @@ padpx = pr.padpx;
 occupancyRatio = pr.occupancyRatio;
 zf = 2;
 
-im = readtiff_matlab([inFol '/' inN '.tif']);
-[sy, sx,sz] = size(im);
+im = readtiff([inFol '/' inN '.tif']);
+[sy, sx, sz] = size(im);
 
 % mask and interpolate
 mask = im(:,:,1:nphases:end);
-mask(mask<0) = 0;
+%mask(mask<0) = 0;
+mask = max(mask, 0);
 mask = logical(mask);
 imask = imresize3(mask,[ceil(sy*zf),ceil(sx*zf), sz/(nphases*ndirs)], 'nearest');
 
 clear mask
 
-im = single(im);
-im = im - bak;
-im(im<0) = 0;
-otf = readtiff_matlab(otfF);
+im = single(im) - bak;
+%im = im - bak;
+%im(im<0) = 0;
+im = max(im, 0);
+otf = readtiff(otfF);
 
-cd /clusterfs/nvme/matthewmueller/cudasireconMex/src/cudaSirecon/;
+cd /clusterfs/nvme/matthewmueller/Matlab-cudaSiRecon/src/cudaSirecon;
 
 if(s(1) > sx)
     s(1) = sx;
@@ -133,14 +135,23 @@ recIm = zeros(ceil(sy*zf),ceil(sx*zf), sz/(nphases*ndirs),'single');
 
 if nn > 1
     for rr = a(logical(edgey+edgex))
+        subImage = im(ymin(rr):ymax(rr), xmin(rr):xmax(rr), :);
+        [csy, csx, csz] = size(subImage);
+        ck_im = zeros(csy+padpx*2, csx+padpx*2, csz,'single');
+        ck_im(padpx+1:csy+padpx, padpx+1:csx+padpx, :) = subImage;
+        OR = nnz(subImage) / numel(subImage);
+
+        %{
         [csy, csx, csz] = size(im(ymin(rr):ymax(rr),xmin(rr):xmax(rr),:));
         ck_im = zeros(csy+padpx*2, csx+padpx*2, csz,'single');
         ck_im(padpx+1:csy+padpx, padpx+1:csx+padpx, :) = im(ymin(rr):ymax(rr),xmin(rr):xmax(rr),:);
-        OR = nnz(im(ymin(rr):ymax(rr),xmin(rr):xmax(rr),:))/numel(im(ymin(rr):ymax(rr),xmin(rr):xmax(rr),:))
+        OR = nnz(im(ymin(rr):ymax(rr),xmin(rr):xmax(rr),:))/numel(im(ymin(rr):ymax(rr),xmin(rr):xmax(rr),:));
+        %}
+        
         if OR>=occupancyRatio
             %         outImg= cudaSireconDriverMex('cudasirecon',inFol,inN,otfF,'-c',...,
             %             configF, im(ymin(rr):ymax(rr),xmin(rr):xmax(rr),:), otf);
-            outImg= cudaSireconDriverMex('cudasirecon',inFol,inN,otfF,'-c',...,
+            outImg = cudaSireconDriverMex('cudasirecon',inFol,inN,otfF,'-c',...,
                 configF, ck_im, otf);
             outImg = outImg(2*padpx+1:csy*2+2*padpx, 2*padpx+1:csx*2+2*padpx, :);
 
@@ -171,16 +182,23 @@ if nn > 1
     end
 
     for rr = a(~logical(edgey+edgex))
+        %{
         [csy, csx, csz] = size(im(ymin(rr):ymax(rr),xmin(rr):xmax(rr),:));
         ck_im = zeros(csy+padpx*2, csx+padpx*2, csz,'single');
         ck_im(padpx+1:csy+padpx, padpx+1:csx+padpx, :) = im(ymin(rr):ymax(rr),xmin(rr):xmax(rr),:);
-        OR = nnz(im(ymin(rr):ymax(rr),xmin(rr):xmax(rr),:))/numel(im(ymin(rr):ymax(rr),xmin(rr):xmax(rr),:))
+        OR = nnz(im(ymin(rr):ymax(rr),xmin(rr):xmax(rr),:))/numel(im(ymin(rr):ymax(rr),xmin(rr):xmax(rr),:));
+        %}
+        subImage = im(ymin(rr):ymax(rr),xmin(rr):xmax(rr),:);
+        [csy, csx, ~] = size(subImage);
+        %ck_im = zeros(csy+padpx*2, csx+padpx*2, csz,'single');
+        %ck_im(padpx+1:csy+padpx, padpx+1:csx+padpx, :) = im(ymin(rr):ymax(rr),xmin(rr):xmax(rr),:);
+        OR = nnz(subImage)/numel(subImage);
         if OR>=occupancyRatio
             %         outImg= cudaSireconDriverMex('cudasirecon',inFol,inN,otfF,'-c',...,
             %             configF, im(ymin(rr):ymax(rr),xmin(rr):xmax(rr),:), otf);
 
             outImg= cudaSireconDriverMex('cudasirecon',inFol,inN,otfF,'-c',...,
-                configF, im(ymin(rr):ymax(rr),xmin(rr):xmax(rr),:), otf);
+                configF, subImage, otf);
             outImg = outImg(2*padpx+1:csy*2+2*padpx, 2*padpx+1:csx*2+2*padpx, :);
 
             recIm(ymin(rr)*2-1+ol/2:ymax(rr)*2-ol/2, xmin(rr)*2-1+ol/2:xmax(rr)*2-ol/2, :) = outImg(ol/2+1:end-ol/2, ol/2+1:end-ol/2, :);
@@ -192,5 +210,6 @@ else
 end
 
 % mask to zero
-recIm(~imask) = 0;
+%recIm(~imask) = 0;
+recIm = recIm .* imask;
 end

@@ -350,7 +350,7 @@ for i = 1:numel(dataPaths)
             inputFullpaths{curr} = dataFullpath;
             outputFullpaths{curr} = dataReconFullpath;
             idx(curr) = ~exist([dataPaths{i} filesep outFol filesep fsname '_recon' ext],'file');
-            funcStrs{curr} =  sprintf(['cd /clusterfs/nvme/matthewmueller/Matlab-cudaSiRecon/src/cudaSirecon/;siReconWrapper(''%s'',''%s'',''%s'',''%s'',''%s'',[%d,%d,%d],%d, %d, %d)'], dataPaths{i},fsname,outFol,otfFiles{cPatt},configFiles{cPatt},chunkSize(1),chunkSize(2),chunkSize(3),overlap, background, ndir);
+            funcStrs{curr} =  sprintf(['cd /clusterfs/nvme/matthewmueller/Matlab-cudaSiRecon/src/cudaSirecon/;siReconWrapper(''%s'',''%s'',''%s'',''%s'',''%s'',[%d,%d,%d],%d, %d, %d, %d)'], dataPaths{i},fsname,outFol,otfFiles{cPatt},configFiles{cPatt},chunkSize(1),chunkSize(2),chunkSize(3),overlap, background, ndir, np);
             curr = curr+1;
         end
     end
