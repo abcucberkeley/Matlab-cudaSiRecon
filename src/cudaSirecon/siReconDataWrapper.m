@@ -97,20 +97,6 @@ if isempty(SlurmParam)
     SlurmParam = ['-p abc_a100 --qos abc_high -n1 --mem=' sprintf('%d',memNeeded) 'G --gres=gpu:a100:1'];
 end
 
-%dataPaths = {'/clusterfs/nvme/Data/20211005_latticeSIM_wait4ms_2p6msInt_10perc_150stacks_1800x512_FOV3/DS/'};
-%{
-dataPaths = {'/clusterfs/nvme/Data/20211005_latticeSIM_wait4ms_2p6msInt_10perc_150stacks_1800x512_FOV3/PSFs/488_NA0p4_sig0p1_highSN/DS/', ...
-'/clusterfs/nvme/Data/20211005_latticeSIM_wait4ms_2p6msInt_10perc_150stacks_1800x512_FOV3/PSFs/488_NA0p46_sig0p1_512xPix_wait4ms_1p65msInt/DS/', ...
-'/clusterfs/nvme/Data/20211005_latticeSIM_wait4ms_2p6msInt_10perc_150stacks_1800x512_FOV3/PSFs/488_NA0p46_sig0p1_512xPix_noWait_2p5msInt/DS/', ...
-'/clusterfs/nvme/Data/20211005_latticeSIM_wait4ms_2p6msInt_10perc_150stacks_1800x512_FOV3/PSFs/488_NA0p46_sig0p1_320xPix_wait4ms_2p6Int/DS', ...
-'/clusterfs/nvme/Data/20211005_latticeSIM_wait4ms_2p6msInt_10perc_150stacks_1800x512_FOV3/PSFs/488_NA0p46_sig0p1_320xPix_noWait_3p4msInt/DS/'};
-%}
-%ChannelPatterns = {'CamB'};
-%parseCluster = true;
-%outFol = 'GPUsirecon';
-
-
-
 % if Deskew is needed then Deskew images first
 if DeskewData || DeskewPsfs
     nFiles = 0;

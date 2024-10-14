@@ -1,4 +1,4 @@
-function [recIm] = cudaSireconChunk(inFol, inN, otfF,configF,outFullPath,varargin)
+function [recIm] = cudaSireconChunk(inFol, inN, otfF, configF, outFullPath, varargin)
 
 %export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib
 %deskew=-32.45
@@ -38,7 +38,6 @@ im = readtiff([inFol '/' inN '.tif']);
 
 % mask and interpolate
 mask = im(:,:,1:nphases:end);
-%mask(mask<0) = 0;
 mask = max(mask, 0);
 mask = logical(mask);
 imask = imresize3(mask,[ceil(sy*zf),ceil(sx*zf), sz/(nphases*ndirs)], 'nearest');
@@ -46,8 +45,6 @@ imask = imresize3(mask,[ceil(sy*zf),ceil(sx*zf), sz/(nphases*ndirs)], 'nearest')
 clear mask
 
 im = single(im) - bak;
-%im = im - bak;
-%im(im<0) = 0;
 im = max(im, 0);
 otf = readtiff(otfF);
 
@@ -75,14 +72,12 @@ ymax = zeros(nyc,1);
 ymin_out = zeros(nyc,1);
 ymax_out = zeros(nyc,1);
 
-
 xmin = zeros(nxc,1);
 xmax = zeros(nxc,1);
 
 xmin_out = zeros(nxc,1);
 xmax_out = zeros(nxc,1);
 
-a = xmin;
 edgey = xmin;
 edgex = edgey;
 
@@ -140,13 +135,6 @@ if nn > 1
         ck_im = zeros(csy+padpx*2, csx+padpx*2, csz,'single');
         ck_im(padpx+1:csy+padpx, padpx+1:csx+padpx, :) = subImage;
         OR = nnz(subImage) / numel(subImage);
-
-        %{
-        [csy, csx, csz] = size(im(ymin(rr):ymax(rr),xmin(rr):xmax(rr),:));
-        ck_im = zeros(csy+padpx*2, csx+padpx*2, csz,'single');
-        ck_im(padpx+1:csy+padpx, padpx+1:csx+padpx, :) = im(ymin(rr):ymax(rr),xmin(rr):xmax(rr),:);
-        OR = nnz(im(ymin(rr):ymax(rr),xmin(rr):xmax(rr),:))/numel(im(ymin(rr):ymax(rr),xmin(rr):xmax(rr),:));
-        %}
         
         if OR>=occupancyRatio
             %         outImg= cudaSireconDriverMex('cudasirecon',inFol,inN,otfF,'-c',...,
@@ -182,16 +170,8 @@ if nn > 1
     end
 
     for rr = a(~logical(edgey+edgex))
-        %{
-        [csy, csx, csz] = size(im(ymin(rr):ymax(rr),xmin(rr):xmax(rr),:));
-        ck_im = zeros(csy+padpx*2, csx+padpx*2, csz,'single');
-        ck_im(padpx+1:csy+padpx, padpx+1:csx+padpx, :) = im(ymin(rr):ymax(rr),xmin(rr):xmax(rr),:);
-        OR = nnz(im(ymin(rr):ymax(rr),xmin(rr):xmax(rr),:))/numel(im(ymin(rr):ymax(rr),xmin(rr):xmax(rr),:));
-        %}
         subImage = im(ymin(rr):ymax(rr),xmin(rr):xmax(rr),:);
         [csy, csx, ~] = size(subImage);
-        %ck_im = zeros(csy+padpx*2, csx+padpx*2, csz,'single');
-        %ck_im(padpx+1:csy+padpx, padpx+1:csx+padpx, :) = im(ymin(rr):ymax(rr),xmin(rr):xmax(rr),:);
         OR = nnz(subImage)/numel(subImage);
         if OR>=occupancyRatio
             %         outImg= cudaSireconDriverMex('cudasirecon',inFol,inN,otfF,'-c',...,
@@ -210,6 +190,5 @@ else
 end
 
 % mask to zero
-%recIm(~imask) = 0;
 recIm = recIm .* imask;
 end
