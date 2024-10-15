@@ -5,30 +5,27 @@ function [recIm] = cudaSireconChunk(inFol, inN, otfF, configF, outFullPath, vara
 
 ip = inputParser;
 ip.CaseSensitive = false;
+ip.addRequired('inFol', @ischar);
 ip.addRequired('inN', @ischar);
 ip.addRequired('otfF', @ischar);
 ip.addRequired('configF', @ischar);
 ip.addRequired('outFullPath', @ischar);
 ip.addParameter('nphases', 5, @isnumeric);
 ip.addParameter('ndirs', 1, @isnumeric);
-ip.addParameter('chunk', true, @islogical);
-ip.addParameter('smooth', false, @islogical);
 ip.addParameter('overlap', 128, @isnumeric);
 ip.addParameter('chunkSize', [320,320,0], @isnumeric);
-ip.addParameter('bak', 99, @isnumeric);
+ip.addParameter('background', 99, @isnumeric);
 ip.addParameter('padpx', 0, @isnumeric);
 ip.addParameter('occupancyRatio', 0.0, @isnumeric);
-ip.parse(inN, otfF, configF, outFullPath, varargin{:});
+ip.parse(inFol, inN, otfF, configF, outFullPath, varargin{:});
 
 pr = ip.Results;
 
 nphases = pr.nphases;
 ndirs = pr.ndirs;
-chunk = pr.chunk;
-smooth = pr.smooth;
 ol = pr.overlap;
-s = pr.chunkSize;
-bak = pr.bak;
+chunkSize = pr.chunkSize;
+background = pr.background;
 padpx = pr.padpx;
 occupancyRatio = pr.occupancyRatio;
 zf = 2;
@@ -41,30 +38,29 @@ mask = im(:,:,1:nphases:end);
 mask = max(mask, 0);
 mask = logical(mask);
 imask = imresize3(mask,[ceil(sy*zf),ceil(sx*zf), sz/(nphases*ndirs)], 'nearest');
+clear mask;
 
-clear mask
-
-im = single(im) - bak;
+im = single(im) - background;
 im = max(im, 0);
 otf = readtiff(otfF);
 
 cd /clusterfs/nvme/matthewmueller/Matlab-cudaSiRecon/src/cudaSirecon;
 
-if(s(1) > sx)
-    s(1) = sx;
+if(chunkSize(1) > sx)
+    chunkSize(1) = sx;
 end
-if(s(2) > sy)
-    s(2) = sy;
+if(chunkSize(2) > sy)
+    chunkSize(2) = sy;
 end
-if(s(1) == 0)
-    s(1) = sx;
+if(chunkSize(1) == 0)
+    chunkSize(1) = sx;
 end
-if(s(2) == 0)
-    s(2) = sy;
+if(chunkSize(2) == 0)
+    chunkSize(2) = sy;
 end
 
-nyc = floor(sy/(s(2)-ol));
-nxc = floor(sx/(s(1)-ol));
+nyc = floor(sy/(chunkSize(2)-ol));
+nxc = floor(sx/(chunkSize(1)-ol));
 
 ymin = zeros(nyc,1);
 ymax = zeros(nyc,1);
@@ -85,8 +81,8 @@ nn = 0;
 for h = 1:nxc
     for j = 1:nyc
         nn = nn + 1;
-        xmin(nn) = (1+((h-1)*(s(1)-ol)));
-        ymin(nn) = (1+((j-1)*(s(2)-ol)));
+        xmin(nn) = (1+((h-1)*(chunkSize(1)-ol)));
+        ymin(nn) = (1+((j-1)*(chunkSize(2)-ol)));
         if j==1
             ymin(nn) = 1;
             ymin_out(nn) = 1;
@@ -102,8 +98,8 @@ for h = 1:nxc
         if j < nyc
             %             ymax(nn) = (s(2)*j-(ol*(j)));
             %             ymax_out(nn) = (s(2)*j-(ol*(j)))*zf;
-            ymax(nn) = (s(2)*j-(ol*(j-1)));
-            ymax_out(nn) = (s(2)*j-(ol*(j-1)))*zf;
+            ymax(nn) = (chunkSize(2)*j-(ol*(j-1)));
+            ymax_out(nn) = (chunkSize(2)*j-(ol*(j-1)))*zf;
         else
             ymax(nn) = sy;
             ymax_out(nn) = sy*zf;
@@ -113,8 +109,8 @@ for h = 1:nxc
         if h < nxc
             %             xmax(nn) = (s(1)*h-(ol*(h)));
             %             xmax_out(nn) = (s(1)*h-(ol*(h)))*zf;
-            xmax(nn) = (s(1)*h-(ol*(h-1)));
-            xmax_out(nn) = (s(1)*h-(ol*(h-1)))*zf;
+            xmax(nn) = (chunkSize(1)*h-(ol*(h-1)));
+            xmax_out(nn) = (chunkSize(1)*h-(ol*(h-1)))*zf;
         else
             xmax(nn) = sx;
             xmax_out(nn) = sx*zf;

@@ -1,4 +1,4 @@
-function siReconDataWrapper(dataPaths,ChannelPatterns, configFiles,varargin)
+function siReconDataWrapper(dataPaths, ChannelPatterns, configFiles, varargin)
 
 % Remember to carefully check your settings here and in your config files
 
@@ -15,8 +15,8 @@ ip.addParameter('otfFiles', {''}, @iscell);
 ip.addParameter('DeskewData', false, @islogical);
 ip.addParameter('DeskewPsfs', false, @islogical);
 ip.addParameter('DeskewCpusPerTask', 8, @isnumeric);
-ip.addParameter('np', 5, @isnumeric); % number of phases
-ip.addParameter('ndir', 3, @isnumeric); % number of phases
+ip.addParameter('nphases', 5, @isnumeric); % number of phases
+ip.addParameter('ndirs', 3, @isnumeric);
 ip.addParameter('angle', 32.45, @isnumeric);
 ip.addParameter('dz', 0.4, @isnumeric);
 ip.addParameter('xyPixelSize', .098, @isnumeric);
@@ -45,8 +45,8 @@ otfFiles = pr.otfFiles;
 DeskewData = pr.DeskewData;
 DeskewPsfs = pr.DeskewPsfs;
 DeskewCpusPerTask = pr.DeskewCpusPerTask;
-np = pr.np;
-ndir = pr.ndir;
+nphases = pr.nphases;
+ndirs = pr.ndirs;
 angle = pr.angle;
 dz = pr.dz;
 xyPixelSize = pr.xyPixelSize;
@@ -156,7 +156,7 @@ if DeskewData || DeskewPsfs
                     inputFullpaths{curr} = dataFullpath;
                     outputFullpaths{curr} = dataReconFullpath;
 
-                    funcStrs{curr} =  sprintf('cd /clusterfs/nvme/matthewmueller/Matlab-cudaSiRecon/src/cudaSirecon/;deskewPhasesFrame(''%s'',%.5f,%.5f,''SkewAngle'',%.5f,''nphases'',%.5f)', dataFullpath,xyPixelSize,dz,angle,np);
+                    funcStrs{curr} =  sprintf('cd /clusterfs/nvme/matthewmueller/Matlab-cudaSiRecon/src/cudaSirecon/;deskewPhasesFrame(''%s'',%.5f,%.5f,''SkewAngle'',%.5f,''nphases'',%.5f)', dataFullpath, xyPixelSize, dz, angle, nphases);
                     curr = curr+1;
                 end
             end
@@ -188,7 +188,7 @@ if DeskewData || DeskewPsfs
             inputFullpaths{curr} = dataFullpath;
             outputFullpaths{curr} = dataReconFullpath;
 
-            funcStrs{curr} =  sprintf('cd /clusterfs/nvme/matthewmueller/Matlab-cudaSiRecon/src/cudaSirecon/;deskewPhasesFrame(''%s'',%.5f,%.5f,''SkewAngle'',%.5f,''nphases'',%.5f)', dataFullpath,xyPixelSize,dz,angle,np);
+            funcStrs{curr} =  sprintf('cd /clusterfs/nvme/matthewmueller/Matlab-cudaSiRecon/src/cudaSirecon/;deskewPhasesFrame(''%s'',%.5f,%.5f,''SkewAngle'',%.5f,''nphases'',%.5f)', dataFullpath,xyPixelSize,dz,angle,nphases);
             curr = curr+1;
         end
     end
@@ -251,7 +251,7 @@ if genOTFs
         inputFullpaths{curr} = dataFullpath;
         outputFullpaths{curr} = dataReconFullpath;
 
-        funcStrs{curr} =  sprintf('cd /clusterfs/nvme/matthewmueller/Matlab-cudaSiRecon/src/cudaSirecon/;makeOTF(''%s'',%d,%.5f,%d,%.5f,%.5f)', dataFullpath,np,moAngle,background,xyPixelSize,zres);
+        funcStrs{curr} =  sprintf('cd /clusterfs/nvme/matthewmueller/Matlab-cudaSiRecon/src/cudaSirecon/;makeOTF(''%s'',%d,%.5f,%d,%.5f,%.5f)', dataFullpath,nphases,moAngle,background,xyPixelSize,zres);
         curr = curr+1;
     end
 
@@ -336,7 +336,7 @@ for i = 1:numel(dataPaths)
             inputFullpaths{curr} = dataFullpath;
             outputFullpaths{curr} = dataReconFullpath;
             idx(curr) = ~exist([dataPaths{i} filesep outFol filesep fsname '_recon' ext],'file');
-            funcStrs{curr} =  sprintf(['cd /clusterfs/nvme/matthewmueller/Matlab-cudaSiRecon/src/cudaSirecon/;siReconWrapper(''%s'',''%s'',''%s'',''%s'',''%s'',[%d,%d,%d],%d, %d, %d, %d)'], dataPaths{i},fsname,outFol,otfFiles{cPatt},configFiles{cPatt},chunkSize(1),chunkSize(2),chunkSize(3),overlap, background, ndir, np);
+            funcStrs{curr} =  sprintf(['cd /clusterfs/nvme/matthewmueller/Matlab-cudaSiRecon/src/cudaSirecon/;siReconWrapper(''%s'',''%s'',''%s'',''%s'',''%s'',[%d,%d,%d],%d, %d, %d, %d)'], dataPaths{i},fsname,outFol,otfFiles{cPatt},configFiles{cPatt},chunkSize(1),chunkSize(2),chunkSize(3),overlap, background, ndirs, nphases);
             curr = curr+1;
         end
     end
