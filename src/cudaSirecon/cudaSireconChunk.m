@@ -54,15 +54,22 @@ end
 if(chunkSize(2) > sy)
     chunkSize(2) = sy;
 end
+if(chunkSize(3) > sz)
+    chunkSize(3) = sz;
+end
 if(chunkSize(1) == 0)
     chunkSize(1) = sx;
 end
 if(chunkSize(2) == 0)
     chunkSize(2) = sy;
 end
+if(chunkSize(3) == 0)
+    chunkSize(3) = sz;
+end
 
 nyc = floor(sy/(chunkSize(2)-ol));
 nxc = floor(sx/(chunkSize(1)-ol));
+nzc = floor(sz/(chunkSize(3)-ol * nphases));
 
 ymin = zeros(nyc,1);
 ymax = zeros(nyc,1);
@@ -76,15 +83,23 @@ xmax = zeros(nxc,1);
 xmin_out = zeros(nxc,1);
 xmax_out = zeros(nxc,1);
 
+zmin = zeros(nzc,1);
+zmax = zeros(nzc,1);
+
+zmin_out = zeros(nzc,1);
+zmax_out = zeros(nzc,1);
+
 edgey = xmin;
 edgex = edgey;
 
 nn = 0;
 for h = 1:nxc
     for j = 1:nyc
+        for k = 1:nzc
         nn = nn + 1;
         xmin(nn) = (1+((h-1)*(chunkSize(1)-ol)));
         ymin(nn) = (1+((j-1)*(chunkSize(2)-ol)));
+        zmin(nn) = (1+((k-1)*(chunkSize(3)-ol)));
         if j==1
             ymin(nn) = 1;
             ymin_out(nn) = 1;
@@ -95,6 +110,12 @@ for h = 1:nxc
             xmin(nn) = 1;
             xmin_out(nn) = 1;
             edgex(nn) = 1;
+        end
+
+        if k==1
+                zmin(nn) = 1;
+                zmin_out(nn) = 1;
+                edgez(nn) = 1;
         end
 
         if j < nyc
@@ -118,9 +139,17 @@ for h = 1:nxc
             xmax_out(nn) = sx*zf;
             edgex(nn) = 1;
         end
+        
+        if k < nzc
+            zmax(nn) = (chunkSize(3)*k-(ol*(k-1)));
+            zmax_out(nn) = (chunkSize(3)*k-(ol*(k-1)));
+        else
+            zmax(nn) = sz;
+            zmax_out(nn) = sz;
+            edgez(nn) = 1;
+        end
 
-
-    end
+        end
 end
 a = 1:nn;
 
