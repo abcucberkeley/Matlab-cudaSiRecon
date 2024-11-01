@@ -20,6 +20,7 @@ ip.addParameter('ndirs', 3, @isnumeric);
 ip.addParameter('angle', 32.45, @isnumeric);
 ip.addParameter('dz', 0.4, @isnumeric);
 ip.addParameter('xyPixelSize', .098, @isnumeric);
+ip.addParameter('occupancyRatio', 0.0, @isnumeric);
 
 % makeOTF Parameters
 ip.addParameter('moAngle', 1.57, @isnumeric);
@@ -50,6 +51,7 @@ ndirs = pr.ndirs;
 angle = pr.angle;
 dz = pr.dz;
 xyPixelSize = pr.xyPixelSize;
+occupancyRatio = pr.occupancyRatio;
 
 moAngle = pr.moAngle;
 background = pr.background;
@@ -336,7 +338,7 @@ for i = 1:numel(dataPaths)
             inputFullpaths{curr} = dataFullpath;
             outputFullpaths{curr} = dataReconFullpath;
             idx(curr) = ~exist([dataPaths{i} filesep outFol filesep fsname '_recon' ext],'file');
-            funcStrs{curr} =  sprintf(['cd /clusterfs/nvme/matthewmueller/Matlab-cudaSiRecon/src/cudaSirecon/;siReconWrapper(''%s'',''%s'',''%s'',''%s'',''%s'',[%d,%d,%d],%d, %d, %d, %d)'], dataPaths{i},fsname,outFol,otfFiles{cPatt},configFiles{cPatt},chunkSize(1),chunkSize(2),chunkSize(3),overlap, background, ndirs, nphases);
+            funcStrs{curr} =  sprintf(['cd /clusterfs/nvme/matthewmueller/Matlab-cudaSiRecon/src/cudaSirecon/;siReconWrapper(''%s'',''%s'',''%s'',''%s'',''%s'',[%d,%d,%d],%d, %d, %d, %d, %f)'], dataPaths{i},fsname,outFol,otfFiles{cPatt},configFiles{cPatt},chunkSize(1),chunkSize(2),chunkSize(3),overlap, background, ndirs, nphases, occupancyRatio);
             curr = curr+1;
         end
     end

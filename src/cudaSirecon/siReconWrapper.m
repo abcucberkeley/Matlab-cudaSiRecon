@@ -1,4 +1,4 @@
-function siReconWrapper(inFol, inN, outFol, otfF, configF, chunkSize, overlap, background, ndirs, nphases)
+function siReconWrapper(inFol, inN, outFol, otfF, configF, chunkSize, overlap, background, ndirs, nphases, occupancyRatio)
 addpath(genpath('/clusterfs/nvme/matthewmueller/Matlab-cudaSiRecon/src/cudaSirecon/'));
 cd '/clusterfs/nvme/matthewmueller/PetaKit5D';
 setup;
@@ -10,7 +10,8 @@ if ~exist(outFullPath,'file')
     % GL: this cudaSiReconChunk.m currently (2023/11/20) messes with z and
     % is only suitable for LLS-SIM
     out = cudaSireconChunk(inFol, inN, otfF, configF, outFullPath, 'chunkSize', chunkSize, ...
-                           'overlap', overlap, 'background', background, 'ndirs', ndirs, 'nphases', nphases);
+                           'overlap', overlap, 'background', background, 'ndirs', ndirs, ...
+                           'nphases', nphases, 'occupancyRatio', occupancyRatio);
     writetiff(out, outFullPath);
 else
     disp('LLS-SIM reconstructed file exists!!!')
