@@ -189,27 +189,27 @@ if nn > 1
 
 
             if ymin(rr) ==1 && xmin(rr) ==1 && ymax(rr) < sy && xmax(rr) < sx % top left edge
-                recIm(ymin(rr)*2-1:ymax(rr)*2-ol/2, xmin(rr)*2-1:xmax(rr)*2-ol/2, zboundsL) = outImg(1:end-ol/2, 1:end-ol/2, zboundsR);
+                recIm(ymin(rr)*zf-1:ymax(rr)*zf-ol/2, xmin(rr)*zf-1:xmax(rr)*zf-ol/2, zboundsL) = outImg(1:end-ol/2, 1:end-ol/2, zboundsR);
             elseif ymin(rr) ==1 && xmin(rr) >1 && ymax(rr) < sy && xmax(rr) == sx % top right edge
-                recIm(ymin(rr)*2-1:ymax(rr)*2-ol/2, xmin(rr)*2-1+ol/2:xmax(rr)*2, zboundsL) = outImg(1:end-ol/2, ol/2+1:end, zboundsR);
+                recIm(ymin(rr)*zf-1:ymax(rr)*zf-ol/2, xmin(rr)*zf-1+ol/2:xmax(rr)*zf, zboundsL) = outImg(1:end-ol/2, ol/2+1:end, zboundsR);
             elseif ymin(rr) >1 && xmin(rr) ==1 && ymax(rr) == sy && xmax(rr) < sx % bottom left edge
-                recIm(ymin(rr)*2-1+ol/2:ymax(rr)*2, xmin(rr)*2-1:xmax(rr)*2-ol/2, zboundsL) = outImg(ol/2+1:end, 1:end-ol/2, zboundsR);
+                recIm(ymin(rr)*zf-1+ol/2:ymax(rr)*zf, xmin(rr)*zf-1:xmax(rr)*zf-ol/2, zboundsL) = outImg(ol/2+1:end, 1:end-ol/2, zboundsR);
             elseif ymin(rr) >1 && xmin(rr) >1 && ymax(rr) == sy && xmax(rr) == sx % bottom right edge
-                recIm(ymin(rr)*2-1+ol/2:ymax(rr)*2, xmin(rr)*2-1+ol/2:xmax(rr)*2, zboundsL) = outImg(ol/2+1:end, ol/2+1:end, zboundsR);
+                recIm(ymin(rr)*zf-1+ol/2:ymax(rr)*zf, xmin(rr)*zf-1+ol/2:xmax(rr)*zf, zboundsL) = outImg(ol/2+1:end, ol/2+1:end, zboundsR);
             elseif ymin(rr) ==1 && xmin(rr) >1 && ymax(rr) < sy && xmax(rr) < sx % top middle
-                recIm(ymin(rr)*2-1:ymax(rr)*2-ol/2, xmin(rr)*2-1+ol/2:xmax(rr)*2-ol/2, zboundsL) = outImg(1:end-ol/2, ol/2+1:end-ol/2, zboundsR);
+                recIm(ymin(rr)*zf-1:ymax(rr)*zf-ol/2, xmin(rr)*zf-1+ol/2:xmax(rr)*zf-ol/2, zboundsL) = outImg(1:end-ol/2, ol/2+1:end-ol/2, zboundsR);
             elseif ymin(rr) >1 && xmin(rr) ==1 && ymax(rr) < sy && xmax(rr) < sx % left middle
-                recIm(ymin(rr)*2-1+ol/2:ymax(rr)*2-ol/2, xmin(rr)*2-1:xmax(rr)*2-ol/2, zboundsL) = outImg(ol/2+1:end-ol/2, 1:end-ol/2, zboundsR);
+                recIm(ymin(rr)*zf-1+ol/2:ymax(rr)*zf-ol/2, xmin(rr)*zf-1:xmax(rr)*zf-ol/2, zboundsL) = outImg(ol/2+1:end-ol/2, 1:end-ol/2, zboundsR);
             elseif ymin(rr) >1 && xmin(rr) >1 && ymax(rr) < sy && xmax(rr) == sx % right middle
-                recIm(ymin(rr)*2-1+ol/2:ymax(rr)*2-ol/2, xmin(rr)*2-1+ol/2:xmax(rr)*2, zboundsL) = outImg(ol/2+1:end-ol/2, ol/2+1:end, zboundsR);
+                recIm(ymin(rr)*zf-1+ol/2:ymax(rr)*zf-ol/2, xmin(rr)*zf-1+ol/2:xmax(rr)*zf, zboundsL) = outImg(ol/2+1:end-ol/2, ol/2+1:end, zboundsR);
             elseif ymin(rr) >1 && xmin(rr) >1 && ymax(rr) ==sy && xmax(rr) < sx % bottom middle
-                recIm(ymin(rr)*2-1+ol/2:ymax(rr)*2, xmin(rr)*2-1+ol/2:xmax(rr)*2-ol/2, zboundsL) = outImg(ol/2+1:end, ol/2+1:end-ol/2, zboundsR);
+                recIm(ymin(rr)*zf-1+ol/2:ymax(rr)*zf, xmin(rr)*zf-1+ol/2:xmax(rr)*zf-ol/2, zboundsL) = outImg(ol/2+1:end, ol/2+1:end-ol/2, zboundsR);
             elseif ymin(rr) ==1 && xmin(rr) ==1 && ymax(rr) < sy && xmax(rr) == sx % top center edge
-                recIm(ymin(rr)*2-1:ymax(rr)*2-ol/2, xmin(rr)*2-1:xmax(rr)*2,zboundsL) = outImg(1:end-ol/2, 1:end,zboundsR);
+                recIm(ymin(rr)*zf-1:ymax(rr)*zf-ol/2, xmin(rr)*zf-1:xmax(rr)*2,zboundsL) = outImg(1:end-ol/2, 1:end,zboundsR);
             elseif ymin(rr) >1 && xmin(rr) ==1 && ymax(rr) < sy && xmax(rr) == sx % middle center edge
-                recIm(ymin(rr)*2-1+ol/2:ymax(rr)*2-ol/2, xmin(rr)*2-1:xmax(rr)*2,zboundsL) = outImg(ol/2+1:end-ol/2, 1:end,zboundsR);
+                recIm(ymin(rr)*zf-1+ol/2:ymax(rr)*zf-ol/2, xmin(rr)*zf-1:xmax(rr)*zf,zboundsL) = outImg(ol/2+1:end-ol/2, 1:end,zboundsR);
             elseif ymin(rr) >1 && xmin(rr) ==1 && ymax(rr) == sy && xmax(rr) == sx % bottom center edge
-                recIm(ymin(rr)*2-1+ol/2:ymax(rr)*2, xmin(rr)*2-1:xmax(rr)*2,zboundsL) = outImg(1+ol/2:end, 1:end,zboundsR);
+                recIm(ymin(rr)*zf-1+ol/2:ymax(rr)*zf, xmin(rr)*zf-1:xmax(rr)*zf,zboundsL) = outImg(1+ol/2:end, 1:end,zboundsR);
             end
         end
     end
@@ -226,7 +226,7 @@ if nn > 1
                 configF, subImage, otf);
             outImg = outImg(2*padpx+1:csy*2+2*padpx, 2*padpx+1:csx*2+2*padpx, :);
 
-            recIm(ymin(rr)*2-1+ol/2:ymax(rr)*2-ol/2, xmin(rr)*2-1+ol/2:xmax(rr)*2-ol/2, (zmin(rr)-1)/(nphases*ndirs)+1+ol/2:zmax(rr)/(nphases*ndirs)-ol/2) = outImg(ol/2+1:end-ol/2, ol/2+1:end-ol/2, ol/2+1:end-ol/2);
+            recIm(ymin(rr)*zf-1+ol/2:ymax(rr)*zf-ol/2, xmin(rr)*zf-1+ol/2:xmax(rr)*zf-ol/2, (zmin(rr)-1)/(nphases*ndirs)+1+ol/2:zmax(rr)/(nphases*ndirs)-ol/2) = outImg(ol/2+1:end-ol/2, ol/2+1:end-ol/2, ol/2+1:end-ol/2);
         end
     end
 else
