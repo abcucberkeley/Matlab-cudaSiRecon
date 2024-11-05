@@ -1,5 +1,5 @@
 function siReconWrapper(inFol, inN, outFol, otfF, configF, chunkSize, overlap, background, ndirs, nphases, occupancyRatio)
-addpath(genpath('/clusterfs/nvme/matthewmueller/Matlab-cudaSiRecon/src/cudaSirecon/'));
+addpath(genpath(fileparts(mfilename('fullpath'))));
 cd '/clusterfs/nvme/matthewmueller/PetaKit5D';
 setup;
 gpuDevice;

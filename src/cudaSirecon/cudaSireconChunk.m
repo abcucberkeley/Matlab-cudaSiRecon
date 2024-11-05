@@ -46,8 +46,6 @@ im = single(im) - background;
 im = max(im, 0);
 otf = readtiff(otfF);
 
-cd /clusterfs/nvme/matthewmueller/Matlab-cudaSiRecon/src/cudaSirecon;
-
 if(chunkSize(1) > sx)
     chunkSize(1) = sx;
 end
