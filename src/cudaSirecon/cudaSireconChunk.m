@@ -219,6 +219,8 @@ if nn > 1
                 recIm(ymin(rr)*zf-1+ol/2:ymax(rr)*zf-ol/2, xmin(rr)*zf-1:xmax(rr)*zf,zboundsL) = outImg(ol/2+1:end-ol/2, 1:end,zboundsR);
             elseif ymin(rr) >1 && xmin(rr) ==1 && ymax(rr) == sy && xmax(rr) == sx % bottom center edge
                 recIm(ymin(rr)*zf-1+ol/2:ymax(rr)*zf, xmin(rr)*zf-1:xmax(rr)*zf,zboundsL) = outImg(1+ol/2:end, 1:end,zboundsR);
+            else
+                recIm(ymin(rr)*zf-1:ymax(rr)*zf, xmin(rr)*zf-1:xmax(rr)*zf, zboundsL) = outImg(1:end,1:end,zboundsR);
             end
         end
     end
