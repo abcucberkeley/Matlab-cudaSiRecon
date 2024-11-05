@@ -156,6 +156,17 @@ a = 1:nn;
 
 recIm = zeros(ceil(sy*zf),ceil(sx*zf), sz/(nphases*ndirs),'single');
 
+% Don't use a dimension's edges if we are not chunking in that dimension
+if(chunkSize(1) == sx)
+    edgex(:) = 0;
+end
+if(chunkSize(2) == sy)
+    edgey(:) = 0;
+end
+if(chunkSize(3) == sz)
+    edgez(:) = 0;
+end
+
 if nn > 1
     for rr = a(logical(edgey+edgex+edgez))
         subImage = im(ymin(rr):ymax(rr), xmin(rr):xmax(rr), zmin(rr):zmax(rr));
